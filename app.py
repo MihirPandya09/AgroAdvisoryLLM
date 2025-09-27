@@ -101,3 +101,4 @@ if submit and query:
             if chunk.choices[0].delta.content is not None:
                 advice_text += chunk.choices[0].delta.content
                 advice_container.text(advice_text)
+
