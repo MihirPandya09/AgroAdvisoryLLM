@@ -1,4 +1,3 @@
-# app.py
 import os
 import json
 import streamlit as st
@@ -15,7 +14,7 @@ PERSIST_DIR = "./agroadvisory_chroma"
 COLLECTION = "agroadvisory"
 
 embedder = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/paraphrase-MiniLM-L6-v2",
+    model_name="sentence-transformers/all-mpnet-base-v2",
     model_kwargs={"device": "cpu"}
 )
 
@@ -83,7 +82,7 @@ if submit and query:
         # Build prompt
         prompt = build_enhanced_prompt(query, retrieved_chunks, structured_data, table_data)
 
-        # Call NVIDIA LLM API
+        # NVIDIA LLM API
         client = OpenAI(base_url="https://integrate.api.nvidia.com/v1", api_key=NVIDIA_API_KEY)
         completion = client.chat.completions.create(
             model="nvidia/llama-3.1-nemotron-70b-instruct",
@@ -101,4 +100,3 @@ if submit and query:
             if chunk.choices[0].delta.content is not None:
                 advice_text += chunk.choices[0].delta.content
                 advice_container.text(advice_text)
-
