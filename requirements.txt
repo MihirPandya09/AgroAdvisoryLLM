@@ -1,7 +1,7 @@
-streamlit==1.35.0
-langchain-community==0.2.1
-openai==1.28.0
-sentence-transformers==2.7.0
-chromadb==0.5.0
-torch==2.3.0
-torchvision==0.18.0
+streamlit
+langchain-community
+openai
+sentence-transformers
+chromadb
+torch
+torchvision
