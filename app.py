@@ -2,27 +2,22 @@ import os
 import json
 import streamlit as st
 from langchain_community.vectorstores import Chroma
-from langchain_community.embeddings import HuggingFaceEmbeddings
+from langchain_hub import HuggingFaceInstructEmbeddings
 from openai import OpenAI
 
+HF_API_KEY = st.secrets.get("HF_API_KEY")
 NVIDIA_API_KEY = st.secrets.get("NVIDIA_API")
-if not NVIDIA_API_KEY:
-    st.error("NVIDIA_API_KEY not set! Add it in Streamlit Secrets.")
+if not HF_API_KEY or not NVIDIA_API_KEY:
+    st.error("HF_API_KEY or NVIDIA_API not set! Add them in Streamlit Secrets.")
     st.stop()
-
-os.environ["OPENAI_API_KEY"] = NVIDIA_API_KEY
 
 PERSIST_DIR = "./agroadvisory_chroma"
 COLLECTION = "agroadvisory"
 
-embedder = HuggingFaceEmbeddings(
+embedder = HuggingFaceInstructEmbeddings(
     model_name="sentence-transformers/all-mpnet-base-v2",
-    model_kwargs={
-        "device_map": "auto", 
-        "torch_dtype": "auto"
-    }
+    huggingfacehub_api_token=HF_API_KEY
 )
-
 
 vectordb = Chroma(
     collection_name=COLLECTION,
@@ -38,7 +33,7 @@ def build_enhanced_prompt(user_query, retrieved_chunks, structured_data, table_d
     if table_data:
         table_context = "\n\nAdditional Table Data (from research documents):\n"
         table_context += json.dumps(table_data, indent=2)
-    prompt = f"""
+    return f"""
 You are KrishiSaathi, a knowledgeable and empathetic agri-advisor assisting small and marginal farmers.
 
 Farmer's Question:
@@ -54,7 +49,6 @@ Real-Time Structured Data:
 
 Provide concise, localized advice for the farmer in simple terms.
 """
-    return prompt
 
 st.set_page_config(page_title="KrishiSaathi AI Advisor", page_icon="🌾")
 st.title("🌾 KrishiSaathi - AI Agri Advisory")
@@ -82,7 +76,7 @@ if submit and query:
 
         prompt = build_enhanced_prompt(query, retrieved_chunks, structured_data, table_data)
 
-        client = OpenAI(base_url="https://integrate.api.nvidia.com/v1")
+        client = OpenAI(base_url="https://integrate.api.nvidia.com/v1", api_key=NVIDIA_API_KEY)
         completion = client.chat.completions.create(
             model="nvidia/llama-3.1-nemotron-70b-instruct",
             messages=[{"role": "user", "content": prompt}],
@@ -98,4 +92,3 @@ if submit and query:
             if chunk.choices[0].delta.content is not None:
                 advice_text += chunk.choices[0].delta.content
                 advice_container.text(advice_text)
-
