@@ -2,24 +2,22 @@ import os
 import json
 import streamlit as st
 from langchain_community.vectorstores import Chroma
-from langchain_hub import HuggingFaceInstructEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from openai import OpenAI
 
-# Get secrets from Streamlit
-HF_API_KEY = st.secrets.get("HF_API_KEY")
 NVIDIA_API_KEY = st.secrets.get("NVIDIA_API")
-
-if not HF_API_KEY or not NVIDIA_API_KEY:
-    st.error("HF_API_KEY or NVIDIA_API not set in Streamlit Secrets.")
+if not NVIDIA_API_KEY:
+    st.error("NVIDIA_API_KEY not set! Add it in Streamlit Secrets.")
     st.stop()
+
+os.environ["OPENAI_API_KEY"] = NVIDIA_API_KEY
 
 PERSIST_DIR = "./agroadvisory_chroma"
 COLLECTION = "agroadvisory"
 
-# Embeddings via HuggingFace API (no local model needed)
-embedder = HuggingFaceInstructEmbeddings(
+embedder = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-mpnet-base-v2",
-    huggingfacehub_api_token=HF_API_KEY
+    model_kwargs={"device": "cpu"}
 )
 
 vectordb = Chroma(
@@ -27,7 +25,6 @@ vectordb = Chroma(
     persist_directory=PERSIST_DIR,
     embedding_function=embedder,
 )
-
 retriever = vectordb.as_retriever(search_type="mmr", search_kwargs={"k": 3, "fetch_k": 10})
 
 def build_enhanced_prompt(user_query, retrieved_chunks, structured_data, table_data=None):
@@ -37,7 +34,7 @@ def build_enhanced_prompt(user_query, retrieved_chunks, structured_data, table_d
     if table_data:
         table_context = "\n\nAdditional Table Data (from research documents):\n"
         table_context += json.dumps(table_data, indent=2)
-    return f"""
+    prompt = f"""
 You are KrishiSaathi, a knowledgeable and empathetic agri-advisor assisting small and marginal farmers.
 
 Farmer's Question:
@@ -53,6 +50,7 @@ Real-Time Structured Data:
 
 Provide concise, localized advice for the farmer in simple terms.
 """
+    return prompt
 
 st.set_page_config(page_title="KrishiSaathi AI Advisor", page_icon="🌾")
 st.title("🌾 KrishiSaathi - AI Agri Advisory")
@@ -80,7 +78,7 @@ if submit and query:
 
         prompt = build_enhanced_prompt(query, retrieved_chunks, structured_data, table_data)
 
-        client = OpenAI(base_url="https://integrate.api.nvidia.com/v1", api_key=NVIDIA_API_KEY)
+        client = OpenAI(base_url="https://integrate.api.nvidia.com/v1")
         completion = client.chat.completions.create(
             model="nvidia/llama-3.1-nemotron-70b-instruct",
             messages=[{"role": "user", "content": prompt}],
