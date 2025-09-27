@@ -1,8 +1,5 @@
 streamlit
-openai
-langchain
 langchain-community
+openai
 sentence-transformers
-torch
 chromadb
-python-dotenv
