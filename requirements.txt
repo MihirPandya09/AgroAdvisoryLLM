@@ -3,3 +3,4 @@ langchain-community
 openai
 sentence-transformers
 chromadb
+python-3.10
