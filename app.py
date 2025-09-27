@@ -15,9 +15,10 @@ PERSIST_DIR = "./agroadvisory_chroma"
 COLLECTION = "agroadvisory"
 
 embedder = HuggingFaceEmbeddings(
-    model_name="sentence-transformers/all-mpnet-base-v2",
+    model_name="sentence-transformers/paraphrase-MiniLM-L6-v2",
     model_kwargs={"device": "cpu"}
 )
+
 vectordb = Chroma(
     collection_name=COLLECTION,
     persist_directory=PERSIST_DIR,
