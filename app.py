@@ -1,15 +1,17 @@
 import os
 import json
 import streamlit as st
-from dotenv import load_dotenv
-from openai import OpenAI
 from langchain_community.vectorstores import Chroma
 from langchain_community.embeddings import HuggingFaceEmbeddings
+from openai import OpenAI
 
-load_dotenv()
-NVIDIA_API_KEY = os.getenv("NVIDIA_API")
+NVIDIA_API_KEY = st.secrets.get("NVIDIA_API")
+if not NVIDIA_API_KEY:
+    st.error("NVIDIA_API_KEY not set! Add it in Streamlit Secrets.")
+    st.stop()
 
-# Initialize vector store
+os.environ["OPENAI_API_KEY"] = NVIDIA_API_KEY
+
 PERSIST_DIR = "./agroadvisory_chroma"
 COLLECTION = "agroadvisory"
 
@@ -25,16 +27,13 @@ vectordb = Chroma(
 )
 retriever = vectordb.as_retriever(search_type="mmr", search_kwargs={"k": 3, "fetch_k": 10})
 
-# Build enhanced prompt
 def build_enhanced_prompt(user_query, retrieved_chunks, structured_data, table_data=None):
     retrieved_context = "\n\n".join(retrieved_chunks)
     structured_context = json.dumps(structured_data, indent=2)
-
     table_context = ""
     if table_data:
         table_context = "\n\nAdditional Table Data (from research documents):\n"
         table_context += json.dumps(table_data, indent=2)
-
     prompt = f"""
 You are KrishiSaathi, a knowledgeable and empathetic agri-advisor assisting small and marginal farmers.
 
@@ -53,7 +52,6 @@ Provide concise, localized advice for the farmer in simple terms.
 """
     return prompt
 
-# Streamlit UI
 st.set_page_config(page_title="KrishiSaathi AI Advisor", page_icon="🌾")
 st.title("🌾 KrishiSaathi - AI Agri Advisory")
 st.write("Ask KrishiSaathi your farming questions and get practical advice!")
@@ -63,7 +61,6 @@ submit = st.button("Get Advice")
 
 if submit and query:
     with st.spinner("Fetching knowledge and generating advice..."):
-        # Retrieve docs
         docs = retriever.invoke(query)
         retrieved_chunks = [d.page_content for d in docs]
 
@@ -79,11 +76,9 @@ if submit and query:
             ]
         }
 
-        # Build prompt
         prompt = build_enhanced_prompt(query, retrieved_chunks, structured_data, table_data)
 
-        # NVIDIA LLM API
-        client = OpenAI(base_url="https://integrate.api.nvidia.com/v1", api_key=NVIDIA_API_KEY)
+        client = OpenAI(base_url="https://integrate.api.nvidia.com/v1")
         completion = client.chat.completions.create(
             model="nvidia/llama-3.1-nemotron-70b-instruct",
             messages=[{"role": "user", "content": prompt}],
@@ -92,7 +87,6 @@ if submit and query:
             stream=True
         )
 
-        # Display advice in real-time
         st.subheader("🧑‍🌾 KrishiSaathi’s Advice:")
         advice_container = st.empty()
         advice_text = ""
