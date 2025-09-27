@@ -17,8 +17,12 @@ COLLECTION = "agroadvisory"
 
 embedder = HuggingFaceEmbeddings(
     model_name="sentence-transformers/all-mpnet-base-v2",
-    model_kwargs={"device": "cpu"}
+    model_kwargs={
+        "device_map": "auto", 
+        "torch_dtype": "auto"
+    }
 )
+
 
 vectordb = Chroma(
     collection_name=COLLECTION,
@@ -94,3 +98,4 @@ if submit and query:
             if chunk.choices[0].delta.content is not None:
                 advice_text += chunk.choices[0].delta.content
                 advice_container.text(advice_text)
+
