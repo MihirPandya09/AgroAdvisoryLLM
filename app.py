@@ -13,7 +13,7 @@ if not OPENAI_API_KEY or not NVIDIA_API_KEY:
     st.error("OpenAI or NVIDIA API keys not set in Streamlit Secrets!")
     st.stop()
 
-os.environ["OPENAI_API_KEY"] = OPENAI_API_KEY
+os.environ["OPENAI_API_KEY"] = NVIDIA_API_KEY 
 
 # ------------------- VECTOR STORE -------------------
 PERSIST_DIR = "./agroadvisory_chroma"
@@ -100,3 +100,4 @@ if submit and query:
             if chunk.choices[0].delta.content is not None:
                 advice_text += chunk.choices[0].delta.content
                 advice_container.text(advice_text)
+
