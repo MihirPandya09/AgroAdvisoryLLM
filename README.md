@@ -19,7 +19,7 @@ KrishiSaathi is an AI-based assistant designed to provide actionable agricultura
 
 ## Live Website
 
-You can access the live application here: [https://agroadvisoryllm.streamlit.app/]([https://agroadvisoryllm.streamlit.app/](https://agroadvisoryllm-amrgohwydmq7mj8bhqqemz.streamlit.app/))
+You can access the live application here: [https://agroadvisoryllm-amrgohwydmq7mj8bhqqemz.streamlit.app/]([https://agroadvisoryllm.streamlit.app/](https://agroadvisoryllm-amrgohwydmq7mj8bhqqemz.streamlit.app/))
 
 ---
 
